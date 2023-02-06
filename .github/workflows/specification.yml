@@ -22,6 +22,6 @@ jobs:
               with:
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
                   file: specification/specification.pdf
-                  asset_name: specification/specification.pdf
+                  asset_name: specification.pdf
                   tag: ${{ github.ref }}
                   body: "The below PDF is the compiled version of the Kolaris specification. You should only trust this document if you can prove it to be genuine, according to our [data integrity policy](https://github.com/TheQuantorium/manifesto/blob/main/integrity-policy.md). To see the changes made in this version, see [the changelog](./CHANGELOG.md)."
