@@ -1,0 +1,17 @@
+version = "0.3.2"
+
+# These scripts require `latexmk` in order to work!
+
+[scripts]
+compile.cmd = [
+    "cd specification",
+    "latexmk -pdf specification.tex",
+    "latexmk -c"
+]
+compile.desc = "compiles the specification (requires `latexmk`)"
+
+release.cmd = [
+    "standard-version --sign --commit-all %%",
+    "git push --follow-tags origin main",
+]
+release.desc = "creates a new project release and pushes it to github"
