@@ -22,6 +22,11 @@
 \usepackage{hyperref}
 \usepackage{mathptmx}
 \usepackage[T1]{fontenc}
+\usepackage[
+    type={CC},
+    modifier={by},
+    version={4.0},
+]{doclicense}
 \author{Sam Brew}
 \date{\today}
 \title{Miriar Specification}
@@ -38,6 +43,8 @@
 
 \maketitle
 \tableofcontents
+\vspace*{\fill}
+\doclicenseThis
 
 
 \part{Introduction}
@@ -125,7 +132,7 @@ evaluates to \texttt{true}. If this does happen, the nodes that find it so will 
 \mathrm{sign}_{N_{SK}}(\{ H(\mathbb{L}), \mathbb{L}_I \}), \tag{3.2}
 \end{align*}
 
-where \(\mathbb{L}_I\) is the set of entry identifiers (each entry \$\epslion\$has a unique identifier), allowing the live group that created this epoch to be reconstructed by any other node who knows all the entries that have been submitted recently. This is to prevent the issue of epoch conflicts, where two entries \(\epsilon_1\) and \(\epsilon_2\) may both trigger \(E(x)\) to signal epoch creation, on slightly different live groups, simply due to the time lag. Essentially, it is entirely possible that these entries might be submitted 'at opposite ends of the network', and they would have to meet 'in the middle', by which time there may well be two conflicting epochs. Nodes would be made aware of this conflict by the two conflicting epoch creation messages of the form in Eq. (3.2), and they can therefore reconstruct both live groups to resolve the conflict.
+where \(\mathbb{L}_I\) is the set of entry identifiers (each entry \(\epsilon\) has a unique identifier), allowing the live group that created this epoch to be reconstructed by any other node who knows all the entries that have been submitted recently. This is to prevent the issue of epoch conflicts, where two entries \(\epsilon_1\) and \(\epsilon_2\) may both trigger \(E(x)\) to signal epoch creation, on slightly different live groups, simply due to the time lag. Essentially, it is entirely possible that these entries might be submitted 'at opposite ends of the network', and they would have to meet 'in the middle', by which time there may well be two conflicting epochs. Nodes would be made aware of this conflict by the two conflicting epoch creation messages of the form in Eq. (3.2), and they can therefore reconstruct both live groups to resolve the conflict.
 
 Of course, this assumes that all nodes involved have knowledge of all the entries in these live groups, which they naturally would, since epoch creation messages come \emph{after} entry propagation messages, but the pathways are the same. In essence, barring major network failure, the messages about the entries will always come before the messages about the new epochs. Of course, network failures are inevitable, but the level of redundancy of the propagation algorithm makes this far less of a concern, if any. If a node does receive an epoch creation message with entry IDs it doesn't recognise, it should wait a moment to see if it receives them imminently, or then query the nodes in its own propagation set to see if they know about it. If they don't, it should dump the message as invalid. (However, of course, it would only be propagated to that node in the first place if one of the nodes in that node's propagation set believed it to be valid, implying they knew of all the IDs, so this situation should never occur unless some nodes are performing \emph{unchecked propagation} --- this is why they sign everything they propagate, to provide evidence on which their NLRs can evict them from the network).
 
@@ -492,7 +499,7 @@ Of course, in reality, most transactions are made up of \emph{exchanges}, in whi
 \epsilon_I = \{ H(\{  v, H(\mathbb{E}_2), \phi \}), \epsilon_\star \}, \tag{10.1}
 \end{align*}
 
-where \(\epsilson_\star\) is the random data. Note the exclusion of \(\tau\), since that should be made on the entire entry, including the UUID. Hence, rather than exchanging their IDs, Bob and Chloe should simply exchange the set \(\{ v, H(\mathbb{E}_2), \phi \}\), which is meaningless to each one without the accompanying signature, but the IDs of the entries can be derived, such that a bundle condition \(\beta\) can be added to the real payload (these are excluded from \(\epsilon_I\) itself, since they are not known until \emph{after} the IDs have been derived).
+where \(\epsilon_\star\) is the random data. Note the exclusion of \(\tau\), since that should be made on the entire entry, including the UUID. Hence, rather than exchanging their IDs, Bob and Chloe should simply exchange the set \(\{ v, H(\mathbb{E}_2), \phi \}\), which is meaningless to each one without the accompanying signature, but the IDs of the entries can be derived, such that a bundle condition \(\beta\) can be added to the real payload (these are excluded from \(\epsilon_I\) itself, since they are not known until \emph{after} the IDs have been derived).
 
 Hence, exchanges can easily be made through Miriar.
 
