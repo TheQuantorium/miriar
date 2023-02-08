@@ -1,0 +1,513 @@
+% Created 2023-02-09 Thu 09:25
+% Intended LaTeX compiler: pdflatex
+
+\documentclass{extreport}
+\usepackage[margin=1in]{geometry}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usepackage{mathptmx}
+\usepackage[T1]{fontenc}
+\author{Sam Brew}
+\date{\today}
+\title{Miriar Specification}
+\hypersetup{
+ pdfauthor={Sam Brew},
+ pdftitle={Miriar Specification},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 29.0.50 (Org mode 9.6)}, 
+ pdflang={English}}
+\usepackage{biblatex}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+
+\part{Introduction}
+\label{sec:org14ec0e7}
+
+Blockchain was one of the greatest innovations in the history of decentralisation, and one that has spurred on a wealth of further innovations in the decentralisation of finance and organisation more broadly, to the extent that it has become the modern bedrock on which the ecosystems of today's 'web3' are built.
+
+However, it is seldom that anyone has questioned this foundation, seldom that anyone has stopped to ask if it works well enough, or if there is a better alternative. As the Kolaris and Lykros systems have proven, there very often is, especially in the realms of storage and computation, yet these protocols leave some things to be desired. When we speak of decentralisation, it is clear that no single protocol can command everything perfectly, simply because, if our goal is to decentralise \emph{everything}, we would need to have a system that works for everything. This is, quite evidently, impossible.
+
+So let us begin with Kolaris. That system is one that facilitates the decentralised storage and computation of data on a large-scale network, but one of its core problems is also one of its core advantages: it has no consensus mechanism. Among Kolaris nodes, there is no way to create a single source of truth, because the network itself works against the concept. Hence, to facilitate the one-hop routing that makes it so efficient, Kolaris must shell out to \emph{directory nodes}, who can only be trusted through the \emph{node-level redundant} system, which is by far the weakest point of Kolaris. A certain number of nodes, elected through a cryptographically secure and random process, are made to produce signatures continually to verify a node's space on the network. These signatures must be continually provided for them to be remotely trustworthy, yet this system is not fault-resistant. To shut down a Kolaris network, one would only need to shut down a percentage of the network equivalent to the percentage of a single node's NLRs who would have to go offline for a signing quorum to be impossible. Such an attack would prevent continuing signatures, thereby spreading through the network like wildfire and rendering all nodes suddenly unauthenticated, paralysing the network with no clear solution.
+
+The second problem raised by Kolaris is that of addressing: one of the most regrettable concession of Kolaris, which itself aims to largely replace blockchain's uses beyond finance, is that it must use a blockchain to achieve secure addressing, since there is no way to intrinsically link an address like \texttt{google.com} to the node that stores that website's content.
+
+These two problems, while they may seem separate, have a common solution: an append-only, decentralised ledger. At first thought, this might seem to be a blockchain, but this is exactly the first thought that has so paralysed our society to be dependent on that very technology. To consider our options intelligently, we must move beyond this first thought and consider: how might we best create an append-only, decentralisation, fully replicated ledger on Kolaris?
+
+This system is called \emph{Miriar}, and it not only solves these two problems, thereby eliminating the most dangerous attack that can be levelled against a Kolaris network, it also provides a mechanism for the payment of funds at an inbuilt level to Kolaris. In short, this system will allow the total replacement of blockchain, in all its current uses.
+
+\part{Specification}
+\label{sec:orge7887dd}
+
+\chapter{System Properties}
+\label{sec:org6c6d895}
+
+Before we dive into how a system like this can work, we need to first consider exactly what its properties should be. Unlike Kolaris, there should be \emph{total} replication of data across the network, except perhaps for sharding where reasonable, since bribery should be only feasible through an attack in which more than half the nodes on the network are malicious (i.e. a 51\% attack).
+
+Further, like Kolaris, there should ideally be a strong distinction between users of the network and nodes of the network, allowing users to register data on the ledger without necessarily storing it themselves, for a fee perhaps.
+
+The remaining properties are largely similar to those of a blockchain: the ledger should be append-only and totally immutable once set, there should be some mechanism by which consensus can be ensured on the correct ledger state, and the ledger should be able to accept arbitrary data, such as transactions, routing entries, or addresses. Beyond this however, it is the full intention of the author to make this system as environmentally-friendly as possible by reducing its power consumption where possible. With Bitcoin mining taking up as much energy as the whole of Spain in 2019 alone, to ignore this problem is to restrict the network's growth. At a purely cynical level, if a protocol is to become as widely used as possible, then cutting out those who believe climate change to be a key issue, whose numbers grow daily, is simply foolish. From an idealistic standpoint, it is our duty in designing these protocols to do our part for the ongoing environmental security of the human race, and for the protection of our planet and ecosystems.
+
+\chapter{Propagation and Gossip Protocols}
+\label{sec:org9c2aa3a}
+
+Most decentralised architectures have some kind of gossip protocol, through which nodes broadcast information to each other. This is generally a subordinate component of blockchains, but what if we made this central? What if \emph{this} became the core of our consensus mechanism?
+
+Since we can build atop Kolaris, we in fact already have access to a perfectly structured gossip system: all nodes know their PLR groups, and their NLRs, and can therefore keep data in sync with them. In fact, if we consider units that use Lykros \emph{patch versioning}, whereby many writes are allowed simultaneously, before being grouped into epochs, data is already kept in sync by PLRs in this way. So what if we applied that exact system to a ledger?
+
+By extending the PLR propagation mechanism such that \emph{all} nodes propagate information to all their PLRs and NLRs, with no fear of redundant propagation, then information entering the network at any point would be practically guaranteed to arrive at a node, since any given node will be told about it by their NLRs and PLR groups. Assuming the absolute minimum number of PLRs, and a number of NLRs \(C\), in accordance with Kolaris notation, along with network dimensionality \(D\), the number of nodes from which a single node would receive information is
+
+\begin{align*}
+2D + C. \tag{2.1}
+\end{align*}
+
+In a three-dimensional network requiring twelve NLRs per node, therefore, the smallest possible number of nodes from which one node would receive information is eighteen. Preventing transmission to any single node is therefore almost impossible. And, of course, nodes that are offline can simply ask their PLRs and NLRs when they come back online what they missed: duping a node at this time would be exceptionally hard, especially since all further communications would have to be controlled as well, or else incoming signatures would appear invalid (signatures in propagation will be addressed in a moment).
+
+It may be tempting to argue that there is no true consensus mechanism here, and that attacking this system should be trivial, but, really, how would one attack it? Let's say Alice submits a new \emph{entry} to the ledger by contacting Bob, a node, who is denoted \(N\). Denoting Bob's NLRs as \(^nN\) and his PLRs as \(^nP\), Bob would transmit this information to the set of nodes
+
+\begin{align*}
+N_G = \{ ^0N, ^1N, ..., ^CN, ^0P, ^1P, ..., ^{2D}P, ..., ^nP \}, \tag{2.2}
+\end{align*}
+
+where \(n\) is the total number of PLRs Bob has, which will necessarily satisfy \(n > 2D\) (since Bob will have a minimum of \(2D\) PLRs by simple geometry, but if he is larger than some of them, he will have more).
+
+Every single one of these nodes in Bob's \emph{propagation set}, denoted \(N_G\) (\(G\) for gossip) will then continue this propagation. It is important to note at this point that the propagation set is \emph{bidirectional}, meaning it is also the set from which a node will receive a new entry \(\epsilon\). Depending on a node's position in the network, it may receive from a subset of it's propagation set, or from all of it. A node receiving from \(N_H\), where \(N_H \subset N_G\), should then propagate to the set \(N_G \setminus N_H\). In other words, if a node's propagation set is 18 strong, and it receives from twelve of them, it should propagate to the other six.
+
+Since both NLRs and PLRs are involved in this, and since NLRs are elected randomly, it is effectively impossible to theoretically model the spread of information through the network --- this would only be possible with full knowledge of the NLRs of each node (although this information would be available in the ledger, and therefore modelling is certainly possible in the real-world).
+
+Due to this difficulty of modelling, it is regrettably infeasible to enforce propagation, since, if one does not receive information about an entry from a particular node, it may simply be because that node has not heard about it yet, rather than a deliberate withholding or the like. This can be worked around, however, through a broader mechanism that ensures that nodes do indeed participate in this whole system, which will be discussed later. Even so, if some nodes choose not to store the ledger or propagate information, this is likely fine due to the sheer size of the propagation sets and the level of redundant propagation.
+
+What can be enforced however is \emph{correct} propagation: if a node receives a clearly invalid entry from another node, it should report that node, and all nodes must sign everything they propagate to other nodes. That is, the payload sent to the propagation set \(N_G\) is
+
+\begin{align*}
+\mathrm{sign}_{N_{SK}}(\epsilon), \tag{2.3}
+\end{align*}
+
+allowing forcible eviction by NLRs on this basis to be clearly marked (since the node \(N\) has provably signed an invalid entry in this case). Using this process for invalid forcible eviction would require all the NLRs to be in collusion against this node (and, if they are, they could simply evict it under the usual Kolaris protocols).
+
+\chapter{The Ledger}
+\label{sec:orge05d024}
+
+Given this propagation protocol, we must now outline a system to store an actual append-only ledger system. This can be based suprirsingly effectively on Lykros' system of \emph{patch versioning}, originally designed for units in Lykros systems that have a large quantity of concurrent writes, which is incompatible with the \emph{linear versioning} system, in which each new version of a unit should sign the previous one. If, however, there are three new versions that arise simultaneously, only one would be able to become the next version, and the others would have to be rejected until they re-signed the one that was accepted. This is the exact same problem as arises in the storage of a ledger, and, pleasingly, the same solutions from the patch versioning system hold.
+
+\emph{It is strongly recommended that the reader familiarise themself fully with the Lykros patch versioning system, before returning to this paper.}
+
+The best way to explain how Miriar handles propagation and storage is perhaps an example. So, let's say that Alice wishes to submit a new entry to the ledger. Once she has a valid entry \(\epsilon\) (the form of which will be explained later), she should submit this to some set of \emph{intial gossip nodes}, who will begin the process of propagation through the network. By submitting to more nodes, there is of course a lower chance of censorship (since really only the nodes in that initial propagation set would be able to choose to censor). Once these nodes have validated Alice's entry (a process to be described later), they will pass it on according to the algorithm described in the previous section, while simultaneously adding it to their own record of the current \emph{live group} (the list of entries that have not yet been sorted into new epochs), which is a set \(\mathbb{L}\), ordered numerically, so that each entry has a defined place (eliminating issues of consensus with respect to order). They should then compute \(H(\mathbb{L})\), where \(H(x)\) is a hash function, and run this through the epoch creation function \(E(x)\), which will return either \texttt{true} or \texttt{false} as to whether or not this hash should lead to the creation of a new epoch. Whereas Lykros would typically decide epoch creation on the basis of when the live group has filled up, Miriar does this algorithmically, eliminating any issues of consensus, since, provided nodes have the same entries, they will necessarily create the same epochs (the matter of when they do \emph{not} have the same entries will be dealt with shortly).
+
+For clarity, once the entry \(\epsilon\) has been validated, a new epoch will be created from the current live group, with it, if
+
+\begin{align*}
+E( H( \mathbb{L} = \{ ..., \epsilon, ... \} ) ) \tag{3.1}
+\end{align*}
+
+evaluates to \texttt{true}. If this does happen, the nodes that find it so will propagate a second message to their propagation sets with the payload
+
+\begin{align*}
+\mathrm{sign}_{N_{SK}}(\{ H(\mathbb{L}), \mathbb{L}_I \}), \tag{3.2}
+\end{align*}
+
+where \(\mathbb{L}_I\) is the set of entry identifiers (each entry \$\epslion\$has a unique identifier), allowing the live group that created this epoch to be reconstructed by any other node who knows all the entries that have been submitted recently. This is to prevent the issue of epoch conflicts, where two entries \(\epsilon_1\) and \(\epsilon_2\) may both trigger \(E(x)\) to signal epoch creation, on slightly different live groups, simply due to the time lag. Essentially, it is entirely possible that these entries might be submitted 'at opposite ends of the network', and they would have to meet 'in the middle', by which time there may well be two conflicting epochs. Nodes would be made aware of this conflict by the two conflicting epoch creation messages of the form in Eq. (3.2), and they can therefore reconstruct both live groups to resolve the conflict.
+
+Of course, this assumes that all nodes involved have knowledge of all the entries in these live groups, which they naturally would, since epoch creation messages come \emph{after} entry propagation messages, but the pathways are the same. In essence, barring major network failure, the messages about the entries will always come before the messages about the new epochs. Of course, network failures are inevitable, but the level of redundancy of the propagation algorithm makes this far less of a concern, if any. If a node does receive an epoch creation message with entry IDs it doesn't recognise, it should wait a moment to see if it receives them imminently, or then query the nodes in its own propagation set to see if they know about it. If they don't, it should dump the message as invalid. (However, of course, it would only be propagated to that node in the first place if one of the nodes in that node's propagation set believed it to be valid, implying they knew of all the IDs, so this situation should never occur unless some nodes are performing \emph{unchecked propagation} --- this is why they sign everything they propagate, to provide evidence on which their NLRs can evict them from the network).
+
+Assuming for a moment that no conflicts arise, this system will allow continuing propagation of entries throughout the network, while steadily accumulating more and more entries in the live group, until new epochs are created on the basis of the \(E(x)\) function. To understand the security of this ledger, one must understand the form of \(\epsilon\). Given a payload \(\phi_\epsilon\),
+
+\begin{align*}
+\epsilon = \{ \mathrm{sign}( \{ \epsilon_I, v, H(\mathbb{E}_2), \phi, \beta, \tau \} ), \eta \}, \tag{3.3}
+\end{align*}
+
+where \(\tau\) is a series of data that satisfy the network's restriction factors, and \(\mathbb{E}_2\) denotes the second-to-last epoch. A unique identifier for the entry \(\epsilon_I\) is also noted here, and new entries should only be added to the ledger if there are none with the same ID already registered, thereby preventing attacks whereby a malicious user resubmits a previous entry multiple times. (The remaining variables here will be explained throughout this paper.) In this notation, \(\mathbb{L} = \mathbb{E}_0\), and the subscript number counts back from the most recent, where each epoch itself is the set of entries within it. Of course, \(E(H(\mathbb{E}_n))\), where \(n > 0\), must output \texttt{true} (otherwise it would not be an epoch).
+
+\emph{Note that the \(\mathrm{sign}\) function is used here as in the Kolaris specification, meaning the signature, combined with a timestamp and the original data being signed.}
+
+Of course, we must assume in the design of a system like this that conflicts \emph{will} indeed occur, but, following the principles of Lykros and Kolaris, whereby the need for consensus is either eliminated or minimised, since clients can interpret the actions of disparate nodes and interpret them on their own, any conflict resolution mechanism must be totally transparent and unambiguous. In general, there are two types of general conflicts possible in this system: there can be censorship, or \emph{epoch divergence}. The former, in which some nodes are not informed about certain entries, would be \emph{extraordinarily} difficult to successfully pull off, since it would require preventing not only the initial entry packets, but also the later epoch creation packets, along with all subsequent packets, since they would be clearly signing an epoch that these nodes who are victims of the censorship would not be aware of. Due to the sheer size of the propagation set for every individual node, the level of network control required to pull of an attack like that would be effectively 50\% of the network, and, even so, if a user submits their entry to even one node not controlled by the attacker, the attack would likely be mitigated. Further, such an attack would be visible from the very fact of the network's divergence in this manner.
+
+The secodn kind of conflict is more natural, and one that poses a genuine threat to a network like this: if two entries do, as mentioned before, simultaneously trigger epoch creation given the same live group, it is possible that two conflicting epochs may develop at the same time. In this kind of conflict, there are ? subtypes that are all addressed slightly differently in Miriar:
+
+\begin{enumerate}
+\item Two or more entries simultaneously create two or more conflicting epochs with only one entry different, and the same number of entries;
+\item Two or more conflicting epochs arise in which one has more entries in it than the other;
+\item Two or more \emph{sets} of \emph{multiple} conflicting epochs arise, an exacerbated version of either case (1) or (2) where further epochs have developed on both sides of the divide before the conflict has been resolved.
+\end{enumerate}
+
+Of these, case (2) is the easiest to solve, as we can just have nodes prefer the longer epoch in terms of the number of contained entries, taking all the entries in the rejected epoch that were not in the accepted one, and adding them back to the live group. \emph{This} is the reason Eq. (3.3) diverges from the typical Lykros patch versioning scheme, in which the most recent epoch \(\mathbb{E}_1\) would be signed: since this epoch is considered constantly under possible contention in the case of epoch conflicts, new entries should include the second-to-most-recent epoch's hash instead.
+
+In case (1), the length-based resolution mechanism is unavailable, so we can simply go with whichever of the conflicting epochs has the highest numerical hash value, since there is no reason to prefer one over the other, unlike in case (2), where we should prefer to displace fewer entries back into the live group. Importantly, in either case, since some entries will be placed back into the live group, it is entirely possible that the very process of conflict resolution will itself create a new epoch on top of the accepted one. it is this kind of complexity that makes such distributed processes so difficult for humans to model internally, although, based on the resolution protocols defined in this paper, general agreement should be able to be reached on everything up to the second-to-most-recent epoch at all times. Hence, when users query the network for some part of the ledger, nodes should only respond up to that verified epoch.
+
+Case (3), however, breaks this pattern, since there will be more substantial epoch conflicts, such that even the second-to-most-recent epoch itself comes into contention. Importantly, maliciously triggering such a conflict would be \emph{exceptionally} difficult, as it would require brute-forcing the epoch creation function (e.g. to get a hash that conforms to some particular regular expression or mathematical inequality), while providing restriction factors for every one of the attempted entries, all while trying to keep up with the current live group (which generally renders it infeasible to force an epoch creation deliberately). Further, the natural occurrence of such conflicts would be minimised by the size of the propagation set for each node, since the network is interlinked for propagation not only through the geometric nature of the PLR system (which could create the effect of conflicting epochs 'meeting in the middle'), but also through the NLRs, which break this geometricity, thereby minimising the risk of one of the conflicts in case (1) or (2) becoming so much more sever as in case (3). However, there are two actions that can be taken to drastically reduce the risk of an event like this: the first is to have more stringent restriction factors to reduce the rate at which new entries are submitted, and the second is to set a lower bound for the number of entries in a single epoch, preventing the 'freak' case of one normal epoch being followed by another with only two entries, or similar. These measures, when combined, will force the network to reject any very small epochs, and wait for a larger number of entries to join the live group, during which time propagation will continue at the same pace, allowing conflict resolution.
+
+If all these measures fail, which, to be frank, is likely in the longer-term to happen at least once, then the usual conflict resolution procedures should be applied: go with the epoch chain that has the larger number of entries, or with the one with the higher sum of the constituent epochs' hashes. The rest of the entries, from the rejected chain, should be placed back into the live group. Since the Lykros patch versioning algorithm accepts a signature of both the most recent and the second-to-most recent epochs in new entries normally, Miriar accepts signatures of either the second-to-most-recent or third-to-most-recent epochs, meaning any entries in rejected epochs that had signed the latter may have been rendered invalid, since two more epochs have now been added, meaning the old epoch they signed is now out-of-range. Such entries should be themselves rejected from re-addition to the live group, and therefore they will be in effect removed from the ledger as invalid. In such cases, the clients who sent these entries should monitor the network to check whether or not their entries have been rejected, re-submitting them if necessary. Admittedly, this does make higher-layer networks designed for things like transaction speed rather challenging to build atop Miriar.
+
+Importantly though, there are two parameters that can be tweaked in Miriar to minimise the risk of a case (3) conflict: \(\Gamma\), the most recent epoch that can be validly signed; and \(\Psi\), the oldest epoch that can be validly signed. Generally, when describing a Miriar implementation, one should describe these parameters as the network's \$\(\Gamma\)\$-\(\Psi\): for instance a network like that described here would have a \$\(\Gamma\)\$-\(\Psi\) of 2-3. The larger this range is, the lower the risk of entries being rejected altogether, and the further back it starts, the longer it will take for entries to be 'confirmed' in the ledger, but the lower the risk of a case (3) conflict (even changing these parameters to 3-4 would greatly reduce the risk of a case (3) conflict, since it would only be meaningful if not one, but two further epochs developed on top of a conflict).
+
+The decision of which \$\(\Gamma\)\$-\(\Psi\) settings to use for a real implementation should be made based on empirical data, and implementations of Miriar in library form should be generic over this.
+
+\chapter{Incentive Systems}
+\label{sec:org66e610c}
+
+Incentivising nodes in this network to store our ledger is a tricky business, because, in Kolaris, nodes are duly compensated for their efforts in storage and computation, according to the Kolaris pricing mechanism. A Miriar ledger would grow, however, and would need to b estored by every (or almost every, for practical purposes) node on the network, without compensation. Adding the cost of storing this ledger to the Kolaris pricing equation introduces both unnecessary complexity and implies that nodes should be compensated in some way for this action, which only applies according to economic logic if they are rendering a service to someone else. In reality, they are rendering a service to the entire network, and to themselves --- as in an empty cinema there is no marginal cost to admitting one extra moviegoer, there is no loss from one node not storing the ledger, all that matters is that the vast majority do.
+
+One way of incentivising this is to have storing the ledger provide a clear benefit to nodes, and, taking inspiration from the Bitcoin protocol's mining design, this can also provide the solution to the problem of minting new tokens in a cryptocurrency that would hypothetically run on this network (if many were to, then this would be equivalent to the Ethereum 'gas' that acts as the base-level token). Imagine some process by which nodes would be elected to receive a newly-minted reward in this token, but claiming it requires them to have knowledge of the entire ledger, thereby incentivising them to store it all. This is certainly not perfect, but it is better than nothing by a long way. (The main problem with this is that nodes might simply ask some other party to store the ledger and pay them to complete this process instead. If enough nodes pay the same entity to do this, that entity would gain censorship-level power.)
+
+Proof of work is this mechanism in blockchain, but this differentiates miners from regular nodes. Miriar makes a different distinction, based on Kolaris: all nodes both store the ledger and perform the role analogous to mining, and are therefore eligible for this reward of new tokens, while users of the netwrok who are not Kolaris nodes are neither eligible for rewards, nor do they have to store the ledger, in whole or in part (though they may wish to cache parts of it, or hashes of parts, for speed).
+
+It may be tempting to consider devising some extraordinarily elaborate proof process here to tie everything together, to trade off the simplicity of the rest of Miriar with something incredibly complex here, but this is actually not required at all. As it turns out, the key difference of Miriar from existing systems that try to achieve the same ends (like blockchain) is its use of the Kolaris network as a structured propagation protocol, which, when combined with Lykros patch versioning, practically eliminates the risk of non-consensus situations. Hence, this process can be literally random election.
+
+In essence, every time a new epoch is created, the hash of the entire ledger up to that point, including that latest epoch, will have zero added to the end of it, and that will be run through the network hash function to produce a point. Then the same will be done, but for one, and then for two, etc., until \(V - 1\), such that \(V\) rewardees are elected automatically. Of course, since this process is fully deterministic on the immutable state of the ledger up to that point, this process does not need to be 'performed' by anyone, and that is the exact point: any node wanting to know whether they have received a reward must find out themselves by making this computation (which requires knowing the entire ledger), and then, depending on the parameters of the network, they may also have to satisfy certain restriction factors (e.g. such as a proof of work, or even submitting a picture of themselves with antlers on), before a transaction they then enter into the ledger can be considered valid. A transaction entry marked with the \texttt{reward} tag should be examined by each node propagating the ledger to check that the network hash of the ledger up to the last assured epoch, when the declared number is added, goes to a point in the range of the node receiving the benefit of the transaction.
+
+Note that this implicitly means that rewards can only be claimed in the epoch directly after they are generated, so the incentive for each node to store the entire ledger is greater for shorter epoch times, improving this aspect of Miriar's security.
+
+\chapter{Addressing}
+\label{sec:org9928c7d}
+
+As alluded to earlier, one of the main reasons Miriar is needed in Kolaris is to solve the problem of linking human-readable addresses (HRAs) with their corresponding root index units (RIUs), since there is nothing that intrinsically links, say, \texttt{google.com} with the point in Kolaris network-space at which the \texttt{index.html} file of that website is stored. However, an append-only ledger can very easily solve this if tuples of addresses with their corresponding RIU identifiers are registered as entries on that ledger. Importantly however, just submitting such a tuple would not be a good idea, since any nodes who wished to control that HRA for themselves could submit a conflicting tuple. Such \emph{content-based conflicts} in the live group can only be validly resolved by rejecting both nodes, which may lead to a future race condition between different users who wish to control a specific HRA. The best way to mitigate this is through a specialised requirement on the \(\tau\) component of such entries, such that the more complex proof of work always wins out in content-based conflicts between addresses. Although this does not provide any additional protection for the address in the long-term (since, once immortalised in the ledger, it cannot be removed), it does prevent \emph{nodes} who propagate this entry from thinking they would like to contorl that HRA themselves, since they will presumably be unable to produce a proof of work as lengthy as that which the original submitting user has created before the next epoch is created.
+
+However, there is one problem not addressed by such a solution: the unlikely event of an epoch conflict that a malicious node who also wants control of this HRA coudl take advantage of. To be clear, the time it would take to force an epoch conflict should, due to the restriction factors involved, be far longer than the time taken to produce a more lengthy proof of work, but, nonetheless, it is \emph{plausible} that an epoch conflict could naturally arise with conflicting address claims in each epoch. This would be almost impossible to orchestrate as a node, since, if Alice the node wishes to take control of an HRA only after she has seen it when it was propagated to her, she would be on the wrong side of the epoch conflict definitionally. Only pre-propagation observation would enable this, and again, only with a very slim chance of working. However, if the epoch with Bob's original claim to some HRA is shorter than the one with Alice's, even if Alice's claim has a simpler proof of work, it will be accepted, since Bob's will be booted out into the live group, where it will suddenly conflict with Alice's 'established' claim. [TODO does this raise any problems for transactions?]
+
+The solution to \emph{this} is to publish an address claim in two stages: the first is an opaque claim that links the RIU's address to an encrypted version of the HRA, and the second is a link to that (by its index in the ledger) which provides the decryption key and the actual HRA, meaning anyone who is searching for a certain HRA can simply search the ledger for it, and then pop back to the earlier link with the RIU. The first tuple can be confirmed to be validly linked to the second tuple by the fact that it contains the HRA, encrypted with the key revealed in the second tuple. The original claim is the first tuple, meaning that anyone who submits a first tuple or their own later, thinking the address to be unclaimed, will unfortunately be in for a nasty surprise later, since the following second tuple will, even if it comes after their second tuple, be preferentially valid. In essence, regardless of the order in which the second tuples come, the one that points to the earliest first tuple should be considered valid. In order to prevent an attack whereby someone hoards addresses, waits for them to become popular, and only then reveals their second tuple, we shall mandate that the second tuple must come within three epochs of the first (though this number could be changed).
+
+Hence, the first tuple should be of the form
+
+\begin{align*}
+\{ \mathrm{encrypt}_k(a), \mathrm{sign}_{r_{\mathfrak{p}_{SK}}}(r) \}, \tag{5.1}
+\end{align*}
+
+where \(a\) is the HRA and \(r\) is the RIU's identifier (which of course includes its Lykros UKF implicitly, ensuring its contents cannot be forged). Note also that \(r\) is signed with the RIU's change permissions public key, preventing links to arbitrary RIUs that the author of such an entry as this does not actually control. The second tuple should then be
+
+\begin{align*}
+\{ a, i, k \}, \tag{5.2}
+\end{align*}
+
+where \(i\) is the index of the first tuple in the ledger.
+
+Of course, both Eqs. (5.1) and (5.2) refer to the payloads of entries, which should be constructed into full entries according to Eq. (3.3).
+
+The final point to be addressed in this system is the transfer of addresses, which can be achieved by providing a later tuple of the form
+
+\begin{align*}
+\{ i, \mathrm{sign}_{r_{\mathfrak{a}_{SK}}}(\mathrm{sign}_{r'_{\mathfrak{a}_{SK}}}(r')) \}, \tag{5.3}
+\end{align*}
+
+where \(r'\) is the new RIU. Any subsequent transfers should use the \(r'\) keys, thereby removing the ability of the original owner to control further transfers. Importantly, the process by which users evaluate an HRA to a RIU is as follows:
+
+\begin{enumerate}
+\item Search the ledger for the HRA itself, finding all 'second tuples' that link to a first tuple;
+\item Of these, follow the earliest index, using the given key \(k\) to decrypt the HRA in the linked entry. If this produces the same HRA, it should be considered valid (note that any second tuple that pointed to an entry it couldn't decrypt validly shoudl be rejected in propagation);
+\item Search the ledger for the index of that first tuple to find any re-assignments of the address, following these continually until there are none left.
+\end{enumerate}
+
+Importantly, step 3 will repeat for every re-assignment, meaning high-churn addresses will take longer to resolve on the network, thereby disincentivising their use (since their value will implicitly depreciate with re-assignment). Still, this operation is incredibly fast for a locally-known ledger.
+
+Hence, Miriar enables the reliable linking of human-readable addresses to points in a Kolaris network, thereby enabling truly secure development of websites and apps in a totally uncensorable manner.
+
+\chapter{Rate Limiting}
+\label{sec:org9f56f8d}
+
+As mentioned several times already, the restriction factors described in the \(\tau\) parameter of Eq. (3.3) are essential to the success of a Miriar system, primarily to limit the creation of new entries, minimising the risk of the case (3) conflicts described in section 3. However, more generally, it can be useful to restrict somewhat the creation of new entries to make propagation a more manageable endeavour. Finally, any distributed system based on a gossip protocol will be far easier to manage if it has a lower throughput. Importantly, this means these restriction factors should be updated continually as time goes on and rocessing power improves, along with interest in a Miriar implementation.
+
+Perhaps the most obvious mechanism for rate limiting is a proof of work, which is a somewhat ironically disregarded use for this algorithm, since it was originally intended for minimising email spam. In the same way here, it is being used for minimising spam to the ledger (which is advantageous in the longer-term, since it lowers the size of the ledger, and therefore the burden on nodes). At the time of writing, the Ethereum blockchan is around half a terabyte in size, and the use of proofs of work can certainly help in a network of Miriar's scale to reduce storage requirements. Sharding, described later, also has major utility in solving this problem.
+
+Importantly, the proofs of work required here should not be extremely computationally intensive for any sort of transaction, since it would be a little pointless to send a five cent transaction if the implicit 'transaction fee' is a dollar's worth of computation. For addresses, however, the proofs required should be more intensive. The exact restriction factors used in both systems should be subject to further research, and this paper will only outline the general need for them at this stage.
+
+\chapter{Routing}
+\label{sec:org28e611f}
+
+Extending on the applicability of Miriar to addressing in Kolaris, it can also in fact \emph{replace} a large part of Kolaris: directory nodes. Since Miriar requires nodes to communicate with their PLRs and NLRs, which are both known at all times, without needing to query DNs, a routing layer can be built on top of it. Provided the time for an entry to reach the 'safe' zone of \(\Psi\) epochs back is lower than the length of the Kolaris probation period \(P\), this is entirely feasible.
+
+However, replacing the DN system with Miriar is not as simple as you might expect, since it also entails the total removal of NLR signatures, resigning NLRs solely to the role of accepting records of bad behaviour and exiling nodes, thereby preventing \emph{domino attacks}, wherein a portion of the network is attacked so as to prevent NLR quora from being able to be reached for some other nodes, meaning they will fall into a state of unverified limbo (since NLR signatures must, in Kolaris, be continually re-provided to ensure ongoing range validity), which can spread across the network, potentially leading to data loss and a mass exodus of nodes.
+
+To understand how Miriar can solve problems like these, we need to first analyse exactly what the role of DNs is in Kolaris: in short, they store the value pair \(\{ N_{AC}, N_{RC} \}\) for each \(N\), indexed by the keys \(N_P\) and \(N_R\) (i.e. the addition and range certificates are indexed by the nodepoint and range). When indexing by a node's nodepoint, which will never change, it is impossible for the DN to return anything invalid, as explained in the Kolaris paper, provided 'colour of the sky' checks going back to the genesis node \(^GN\) are possible. It is when a client wishes to index by the \emph{range} of a node that problems arise, since it is eminently possible for a DN to provide the old range of a node if they wish to manipulate the network, which can even lead to their controlling large parts of the network, severely undermining Kolaris' security. This is mitigated traditionally by having the NLRs sign the range certificate (\(N_{RC}\)) of their node every probation period, meaning that, if the latest signature has not yet been provided, the node's range shoudl be considered potentially unverified, and the node itself shoudl be considered offline. (This is what facilitates domino attacks.)
+
+If we were to store all this in an append-only ledger, however, we might instead first store the key-value pair
+
+\begin{align*}
+\{ N_P, N_AC \}, \tag{7.1}
+\end{align*}
+
+since neither the nodepoint nor the addition certificate will ever change. Again, this mapping is infallible, and the addition certificate validates that whoever submits this entry to the ledger has the authority to do so (since it includes signatures from the addition chain and the parent node, which should be validated during propagation). This therefore allows indexing a node by its nodepoint without a DN, and, neatly, using a ledger that is distributed across the entire network for this means a client can contact any node and receive this tuple infallibly (since it will never need to be updated).
+
+As for the range, this is slightly more complex, since a node's range will change over time, as new nodes are added to its space, and as other nodes adjacent to it are removed, and it expands to fill some of their space. Traditionally in Kolaris, such changes would be captured by the \emph{range modification list} (RML), which, together with the signatures on it of the NLRs, makes up \(N_{RC}\), tha range certificate. In a ledger system like Miriar, we can list each element in the RML as a separate entry in the ledger, with each one linking to the entry described in Eq. (7.1). Since such entries broadly fall into three categories: addition, exile, and voluntary removal, the forms of the entries for each are noted now. When a new node \(A\) is added that takes up some of the space of \(N\), the entry payload should be
+
+\begin{align*}
+\{ N_P, N_{R'}, A_P, ``addition'' \}, \tag{7.2}
+\end{align*}
+
+which is the nodepoint and the new range \(N_{R'}\), which can be trivially validated in both propagation and later examination from \(A_{AC}\) (which is infallible due to the addition chain), which can be acquired by checking the ledger for \(A_P\), included here. We don't include \(A_{AC}\) in such entries to minimise the size of the ledger.
+
+When a node \(A\) adjacent to \(N\) is exiled from the network by its NLRs, or when it voluntarily leaves, the entry payload for the adjustment to \(N\)'s range should be
+
+\begin{align*}
+\{ N_P, N_{R'}, A_P, ``removal'' \}, \tag{7.3}
+\end{align*}
+
+which is the nodepoint of \(N\), the new range, and the nodepoint of \(A\), which should link at this point to a removal certificate previously submitted either by \(A\) (in the case of voluntary removal, according to Kolaris Eq. (6.3)), or by one of the NLRs of \(A\) (in the case of forced exile, according to Kolaris Eq. (6.4)).
+
+Note that, in both cases of removal, the new range \(N_{R'}\) can be validated through the node removal algorithm, which can be trivially executed both during propagation, and during later inspection.
+
+Importantly, entries of the form in Eq. (7.2), regarding the addition of a new node, should be submitted by the parent node \(N\) when \(A\)'s probation period is up, while those entries regarding the removal of other nodes, as in Eq. (7.3), are more complex: the removal of a node \(A\) will affect the nodes adjacent to it on the removal axis, of which there could be an arbitrarily large number, so they will each need to individually submit one of these certificates upon such a removal, linking through the nodepoint \(A_P\) of the removed node to the removal certificate that has been previously submitted. During the interim period when the removal certificate has been issued for \(A\), but not the range update certificate for \(N\), clients can simply run the node removal algorithm themselves to determine where to send their requests. Before the removal certificate of \(A\) has been published, it should be considered as still operational, but, if it is offline, requests should be redirected to its PLRs for the point in question, as usual.
+
+Thus, we are able to use Miriar to construct an ongoing list of updates to ranges, which together effectively constitute a routing protocol. The problem of ranges in Kolaris is not so much that fake ranges might be issued as it is that a DN might provide a node who \emph{previously} occupied a certain range, although this is impossible if the entire ledger is known. Since all nodes store the ledger, the routing between compliant nodes is therefore infallible, with no NLR signatures needed. As for clients, very few of whom will likely store the full ledger, they would most likely depend on a series of nodes that they trust, although this itself opens them up to the possibility of fraud, so they should always check with random nodes, and ideally download the entire ledger themselves.
+
+In terms of attacks that could be executed using this alternative routing system, a node who waas queried by a light client about which node controls a certain point could provide an old range, they could suppress removal certificates, they coudl state that a node does not exist, but they could not provide an outright \emph{false} range, since a range should always be validated by checking it against the removal and addition certificates that have affected the original range in the node's own addition certificate. For example, if Alice the node begins by controlling some range, and then her range contracts due to some new node taking part of her space, and later some client asks her who controls part of her old range, she could feasibly say herself, and, without seeing the whole ledger, this client would know no better (which is why asking many uncorrelated nodes is critical). Of course, if a client first asks Alice who the nodes are that it should query in addition to her, this would be a little pointless, since she could respond with the addresses of other nodes she controls, giving the client a false sense of security.
+
+In general, using Miriar as a replacement to Kolaris' DN architecture reduces the overall cost of running the network (since DNs are simply not required), removes the partial censorship power that DNs can hypothetically have in Kolaris if they collude with each other, and it mitigates entirely the possibility of a domino attack. The tradeoff is the loss of confidence for nodes that they cannot be lied to about routing, since the nodes they query may provide them with bad range information, which is why, especcially in systems that have a large number of light clients, a hybrid system may be best: use Miriar for all routing information, allowing infallible routing without domino attack vulnerability, but also have DNs exist for storing the kinds of certificates that NLRs continually sign to validate the RML of a node, thereby allowing light clients to act with confidence about ranges, as in the traditional Kolaris architecture. If they find a node to be in limbo, they an then begin querying the ledger itself to determine the state of that node, and large-scale domino attacks become impossible, since the 'limbo' state of not having continuing NLR certificates becomes one that only impacts a secondary layer of routing, rather than the foundations of the whole routing protocol. For large-scale networks, this hybrid approach is recommended (with Miriar also acting as a historical database on previous ranges, which is far more feasible than getting DNs to store such information).
+
+\chapter{Propagation Validation}
+\label{sec:org8c98352}
+
+Existing distributed ledger systems have generally adopted one of two paradigms with regards to the execution of arbtirary computations in ledger validation: all must follow a single, pre-defined pattern (e.g. Bitcoin), or different types of entries may declare arbitrary validation algorithms, often called \emph{smart contracts}. In Ethereum, each block contains the 'state' of the network, and the fact that Miriar uses Lykros patch versioning provides a hint to how it might handle this: through \emph{emergent state}. Every entry in Miriar can mutate some hypothetical state that emerges from the fact that there are entries that have mutated it. For example, let's say Alice wants to hold \emph{a thing} in escrow before recording that it has been transferred to someone who was able to provide a proof of work first. Or, after thirty days, if no-one has solved the problem, the token defaults back to her.
+
+In order to understand how we might implement this, we must first define what exactly is available to a Miriar \emph{script}, and how these are different from Kolaris scripts. Firstly, any Miriar script will be executed by every single node on the entire network at least once, meaning its output is effectively absolutely trustworthy, provided a 51\% attack has not been executed on the Kolaris network (which, as shown in that paper, would be unreasonably difficult). Further, Miriar scripts must alwasy simply return a boolean value: either the entry should continue to be propagated, or it should not. Astute readers will note that this means \texttt{true} and \texttt{false} have different levels of verifiability: if a computation outputs \texttt{true}, then the entry will end up being recorded in the ledger, implying the the network agrees that it is valid. If it outputs \texttt{false}, then it may be stopped by the very first node, and therefore it would only be executed once (which is highly fallible). To get around this, if a node receives a computation from a \emph{client}, implying that it is responsible for beginning the propagation, then it should propagate \emph{regardless} of whether or not the script outputs \texttt{true}. But, if it outputs \texttt{false}, it should not this in its signed propagation to \(N_P\). If a client provides its entry to, say, three nodes to begin with, then this would mean it would be validated by 54 nodes, assuming a network where \(D = 3\) and \(C = 12\), which should be more than satisfactory. If an attacker wished to censor an entry, they would have to know where it was being delivered to first (which, with anonymous communication addresses, would require control of 51\% of the network, at least).
+
+The next asset Miriar scripts have available to them is Kolaris itself: the Kolaris computation system is unsuited for many contract-style applications, and it generally works far better for, say, training machine learning models, or performing arbitrary computations for a server backend, etc. Through its verifiable computation system however, and especially when zk-SNARKs are added (the proofs for which can be conveniently computed through Kolaris itself, absolutely verifiably), Kolaris can act as an oracle for Miriar computations, simply requiring someone to execute the script required. If this script needs to be run only once, it is probably best for a client to do so, and to then enclose the certificate in their entry payload, but recurring scripts are perhaps best stored in Kolaris itself immutably, and then referenced for execution (since all this requires is a single request to a computation bridge, which can be performed by any of the propagating nodes or a client).
+
+In the simple example of Alice's escrow system, however, very little of this machinery is required. First, she should write a script (in any programming language that can be satisfactorily containerised for execution, most likely by WebAssembly or the like, here in Rust) something like this:
+
+\begin{verbatim}
+#[miriar::main]
+fn main(curr_id: Id, entry: Payload, state: State) -> Result<(), (Id, String)> {
+    match entry {
+        Payload::Begin { day, .. } => {
+            if let Some((id, _)) = state.begun {
+                return Err((id, String::from("contract already begun")));
+            } else if day != Day::current() {
+                // This is a self-blame, since this entry is objectively invalid, without needing
+                // any reference to any others (it will be invalid regardless of the state of the contract)
+                return Err((curr_id, String::from("cannot retroactively/proactively begin the contract")));
+            } else {
+                return Ok(());
+            }
+        },
+        Payload::Claim { proof } => {
+            if let Some(id) = state.claimed {
+                return Err((id, String::from("reward already claimed")));
+            } else if let Some(id) = state.terminated {
+                return Err((id, String::from("contract already terminated")));
+            } else if state.begun.is_none() {
+                // Another self-blame
+                return Err((curr_id, String::from("contract not begun")));
+            } else if Day::current() > (state.begun.unwrap().1 + 30) {
+                // We blame this on the beginning entry
+                return Err((state.begun.unwrap().0, String::from("too late to make a claim")));
+            } else {
+                if proof_is_valid(proof) {
+                    return Ok(());
+                } else {
+                    // Self-blame
+                    return Err((curr_id, String::from("proof invalid")));
+                }
+            }
+        },
+        Payload::Terminate => {
+            if let Some(id) = state.terminated {
+                return Err((id, String::from("contract already terminated")));
+            } else if let Some(id) = state.claimed {
+                return Err((id, String::from("reward already claimed")));
+            } else if state.begun.is_none() {
+                // Self-blame
+                return Err((curr_id, String::from("contract not begun")));
+            } else if Day::current() < (state.begun.unwrap().1 + 30) {
+                return Err((state.begun.unwrap().0, String::from("too early to terminate")));
+            } else {
+                return Ok(());
+            }
+        },
+    }
+}
+
+#[miriar::payload]
+pub enum Payload {
+    Begin {
+        amount: u16,
+        day: Day,
+    },
+    Claim {
+        proof: String,
+    },
+    Terminate,
+}
+
+// This would be a proper entry id type in a real contract, and it would be library-provided.
+pub type Id = String;
+
+pub struct State {
+    /// The day on which the contract began, and the id of the entry that began it, if indeed it has been begun yet,
+    begun: Option<(Id, Day)>,
+    /// The amount staked. This does not have an entry ID assoicated with it, because it doesn't need one: after the
+    /// contract has been begun, no other entry can change this, or declare a different value. Conflicting `Begin`
+    /// payloads will be identified without this.
+    amount: u16,
+    /// THe id of the entry that claimed the reward, if the reward has been claimed.
+    claimed: Option<Id>,
+    /// Whether or not the creator has 'terminated' the contract by taking the reward back,
+    /// which is not possible after a claim (i.e. the contract will always either be waiting, claimed, or
+    /// terminated, if it has been started).
+    terminated: Option<Id>,
+}
+#[miriar::derive_state]
+pub fn derive_state(prev_entries: Vec<(String, Payload)>) -> Result<State, (Id, String)> {
+    // If there have been no entries for this contract yet, then it hasn't been started yet
+    if prev_entries.is_empty() {
+        return Ok(State {
+            begun: None,
+            amount: 0,
+            claimed: None,
+            terminated: None,
+        });
+    }
+
+    // In Rust, this removes the first element of the list, allowing us to iterate over the rest later
+    let first_entry = prev_entries.remove(0);
+    if let Payload::Begin { amount, day } = first_entry.1 {
+        let mut claimed = None;
+        let mut terminated = None;
+        let mut begun = None;
+
+        // First, handle possible errors that exist *without* this new entry
+        // This excludes the first entry because of the earlier `.remove()`
+        for (id, entry) in prev_entries {
+            match entry {
+                Payload::Begin { .. } => return Err((id, String::from("contract began multiple times"))),
+                Payload::Claim { .. } => {
+                    if terminated {
+                        return Err((id, String::from("claimed after termination")));
+                    } else if claimed {
+                        return Err((id, String::from("claimed twice")));
+                    } else {
+                        claimed = Some(id);
+                    }
+                },
+                Payload::Terminate => {
+                    if terminated {
+                        return Err((id, String::from("terminated twice")));
+                    } else if claimed {
+                        return Err((id, String::from("terminated after claim")));
+                    } else {
+                        terminated = Some(id);
+                    }
+                }
+            }
+        }
+        // It is impossible to have `claimed && terminated == true` after this loop
+
+        Ok(State {
+            // We know these two values from the firt `Payload::Begin` entry
+            begun: Some((first_entry.0, day)),
+            amount,
+            // And we know these from looping over the remaining entries
+            claimed,
+            terminated,
+        });
+    } else {
+        // If the first payload isn't starting things, something has gone wrong
+        return Err((first_entry.0, String::from("first payload does not start the contract")));
+    }
+}
+\end{verbatim}
+
+This may seem like a very substantial script, but in reality it acts very simply, and shows rather well how such scripts operate: there is always a \texttt{main} function, or some kind of entrypoint, which must take the current entry's ID, the entry itself, and the state of the contract thus far. There is then a function \texttt{derive\_state} to derive a \texttt{State} from \texttt{Vec<(Id, Payload)>} (i.e. a list of previous entry IDs with their corresponding payloads), which means the node running this script can iterate over all previous entries for this contract, plug them into that function, and then have a \texttt{State} to provide to \texttt{main}. This function encapsulates the idea of \emph{emergent state}: it quite literally emerges from all the previous entries. Importantly, the \texttt{derive\_state} function must be a \emph{pure function}, meaning, given the same ledger state, it must always return the same output --- this allows the state of contracts to be cached by nodes to simplify future executions.
+
+As for the actual logic of the contract, it largely consists of ensuring that errors do not occur: most of the state derivation and entrypoint functions are spent making sure that we don't have things like claims after termination, or the like. Importantly, the \texttt{main} function very simply returns a \texttt{Result} (which, in this context, can be thought of a \texttt{bool}, where \texttt{false} has a \texttt{String} reason attached, and an \texttt{Id} to blame), indicating whether or not the new entry should be allowed through. The state derivation function has the same return type, but, on a success, will attach the \texttt{State} object. If this state derivation function is run against the ledger up to the latest stable epoch \(\epsilon_\Gamma\), no such errors should ever occur, unless there has been a serious failure in previous propagation validations. However, if this is run against a volatile epoch, or against the live group, this blame mechanic becomes important, because it indicates which entries are mutually exclusive, and, in the live group, which ones should \emph{both} be removed. The exact conflict resolution mechanisms used here will be described in detail in a moment. Notably, the state itself includes the IDs responsible for each part of the state, allowing the main contract logic to blame other entries for any errors that occur. The blame mechanic denotes primarily mutual exclusivity: if one entry blames another, it cannot exist in the ledger with that entry, but either could implicitly exist on its own. Sometimes, there will be a \emph{self-blame}, which indicates that an entry is invalid no matter what the state of the ledger is. In the example code above, this will occur in cases such as when an invalid claim proof is submitted, or when the contract has not yet been started (since the only valid entry at that stage would have the \texttt{Begin} payload).
+
+Once Alice has this script, she can make it into a contract by compiling it to something like WebAssembly [TODO footnote], and then hashing it: this hash is the contract type (noted as \(v\) in Eq. (3.3)), and it would be idiomatic in human language to refer to contracts by the first few letters of their hashes (if there are conflicts, perhaps replacing them with dashes). Of course, this program needs to be accessible to all the nodes involved, and, since this is a fairly small and custom contract, it is most likely that Alice would simply transmit this program together with her first entry, as later claimants would. Of course, her first entry would be of the type \texttt{Payload::Begin}, defining the amount of the reward and the current day. Notice that, if she does not specify the correct current day, nodes will reject this (of course, this should be in a pre-agreed timezone, such as UTC). It is generally recommended that contracts like this, that access the day, be executed early in the day (so propagation does not slip over into the following day, thereby invalidating the entry). Using hours and allowing leeway is probably a better implementation here.
+
+Importantly, it may not make sense as to why the main function does not return the new state, but remember that all entries for this contract must have payloads that can be deserialized into \texttt{Payload} (if they cannot be, the entry will be rejected before even getting to the script), and therefore the very fact that the new entry is accepted \emph{mutates} the state for the next execution!
+
+Note also in this specific case that we are assuming that this \texttt{amount} is entirely hypothetical: there is no linking to any currency system or the like, though that will be dealt with later.
+
+There is, however, one very important problem with this system. If the validity of new entries is computed on the state of the ledger up to \(\mathbb{E}_1\), the most recent epoch, it is entirely possible that another entry will come into the live group that conflicts with this one. For instance, let's say two participants, Bob and Chloe, make a claim almost simultaneously, in the same epoch. This would lead to both being present in the live group, and both \emph{appearing} valid against the latest epoch, because they are: it is only with reference to each other that they are not. The solution to this, however, is surprisngly simple, provided one has trust in the conflict resolution mechanisms described earlier. According to those, if conflicting epochs are created that have conflicting entries for a particular contract, one of the epochs will have its contents booted out into the live group, and those entries should then all be revalidated before being re-propagated. This makes consensus resolution a somewhat slow process, but this is necessary in order to exile one of the conflicting entries. The randomness of this highlights an essential principle in contract design: \textbf{if two contract entries conflict, the one that will prevail will most likely be entirely random}.
+
+However, this still doesn't solve the problem of two conflicting entries in the live group, but this is even simpler: rather than using the state of the ledger up to \(\mathbb{E}_1\) to derive the state for the contract, use the state all the way up to what is known of the live group. This highlights another principle of contract design: \textbf{any conflicts between entries must be mutual, and orderless within a single epoch}. That is, a conflict should not be only caused if entries appear in a certain order, and, if entry A conflicts with entry B, entry B will implicitly conflict with entry A, leading to \emph{both} entries being removed from the live group --- this is what noting the entry that caused an error enables. There is the possibility of \emph{reverse propagation} here though, in which perhaps through an offline node, or a resubmission, or any number of other factors, one of the entries that was removed is somehow resurrected and shows up again in the network. If the other one does not, then it will be considered valid on its own: hence, once again, conflict resolution is random within contracts.
+
+Through this system, we can confidently say two things: the state of the ledger for all epochs before \(\mathbb{E}_\Gamma\) is ensurably valid, and the state of the live group of all individual nodes will also be valid. The live groups that different nodes store probably will not be the same, due to the ongoing nature of propagation, but they will at least all be valid, in their various ways. Since conflict resolution is well-defined in Miriar, this creates a full system of arbitrary code execution in propagation validation.
+
+One critical difference between Miriar and other smart contract systems, such as Ethereum, is that Miriar does not have an underlying 'gas' system, or any such transaction system that pays for contracts. Rather, any cryptocurrency infrastructure would be built on top of this, meaning the underlying system is far more resilient to exchange rate changes and other economic factors.
+
+However, in light of \emph{this}, the problem of computational complexity must be addressed. Since contracts are executed in a containerised environment, and since they must be deterministic, they have no access to the network or any other system facilities. Any access to the Kolaris network on which they run should be facilitated by the nodes they are first submitted to, and the proofs thereof should be carried through the network with the entry: in such cases, the \emph{generated data} of an entry will be present, signed by the original node through which the entry entered the network (multiple can be used, but the one with the numerically largest signature will be favoured eventually). The agreement signatures of all other nodes are implicit, since they have continued the propagation. Such additional data is denoted as \(\eta\) in the entry payload described in Eq. (3.3):
+
+\begin{align*}
+\eta = \mathrm{sign}_{G_{SK}}(\{ \eta_0, \eta_1, ..., \eta_n, G_{PK} \}) \tag{8.1}
+\end{align*}
+
+for the entry node \(G\) and \(n\) proofs that had to be fetched from Kolaris. Note that these are \emph{perfect} for use in oracles. Importantly, if there are costs associated with these proofs (e.g. for computation), the entry node should also be passed a transaction entry, or the escrow of one. (That transaction should, however, not be dropped even if the smart contract later has a conflict or is invalidated, since the work has been performed.)
+
+As touched on earlier, every entry requires a minor proof of work \(\tau\) to prevent the network being spammed, though contracts should have a more complex proof of work attached to place a slightly higher bar on exacting computation from network nodes. Further, a final restriction is placed on propagation computations that they must be able to be executed within a certain amount of time. If this fails, or if they breach other restrictions on CPU usage etc., then they should be terminated, and propagation should be failed. In such cases, nodes that cancel a validation should propagate the entry with a signature of it with the term \texttt{-c}, indicating it was cancelled. If a node receiving such an entry finds that the last three layers of signatures are \texttt{-c}, it should drop the entry entirely. At the discretion of networks, these resource limits should be maximum limits, and nodes should be able to individually set more lax restrictions, allowing the network to work better when more nodes have greater computation power.
+
+For contracts that require more complex executions, they should defer to the Kolaris computation platform, which does have access of course to the state of the ledger up to \(\mathbb{E}_\Gamma\), the most recent non-volatile epoch, but such contracts should be careful that any conflicts are clearly raised by the contract logic itself, not this kind of pre-logic, since it does not have access to the volatile epochs and live group, where conflicts may be raised. In cases of mismanagement like this, contract states may become inconsistent, which can lead to the loss of real value, or, in catastrophic instances, major failures, such as false positive actions (e.g. if a smart contract controlled a missile launch system, you can see how this could go wrong with the incorrect parameters). Generally, \textbf{contracts must not assume that the network is wrong in the case of a state inconsistency in the ledger history}, since it is almost guaranteed to be a problem in their own logic. For instance, a missile control system should not assume that the network has been hacked by a foreign power and launch, rather it should assume that it is faulty, and enter a broken state. Where this occurs, the contract should be replaced, or, where it is deliberately possible, a key may perhaps be created and split by Shamir secret sharing between stakeholders to allow the state to be imperatively reset with a special kind of command entry. This is of course a semi-centralised paradigm, and it should be avoided in all cases but those in which it is essential.
+
+With this system now described, we have provided the foundations on which Miriar functions: addressing, routing, currencies, and custom smart contracts are all implemented through custom validation logic (with the inbuilt ones being cached by nodes). This in turn means that updates to, say, the logic used to validate addresses in Miriar can be made without the need for updating Miriar itself: only the contract logic needs to be updated, which will necessarily change the hash, meaning the old logic can still be used if necessary, allowing a more gentle migration process deliberately reminiscent of Lykros' key turnover process.
+
+\chapter{Sharding}
+\label{sec:orga7ad456}
+
+Having described Miriar's conflict resolution and propagation systems, along with its mechanisms to incentivise nodes to store the ledger, it may have become apparent that there is one thing that coudl greatly improve the ledger's performance: \emph{sharding}. This is the practice of splitting the ledger up into \emph{shards} across the network, thereby reducing the amount each individual node has to store from \(x\) to \(\frac{x}{Z}\), where \(Z\) is the number of shards used.
+
+Before we can understand why sharding may be so beneficial for ledger systems like Miriar, we first need to understand exactly how we might \emph{shard} the ledger. The naive approach would be to simply split it into chunks, stored by different sections of the network, however this would remove all incentives for nodes to store their section, since only the section receiving new entries would have any possibility of getting rewards. This would rapidly lead to data loss and disengagement. Alternately, we could split the entire ledger into separate sub-ledgers, effectively creating multiple Miriar networks within the one. This way, new entries would be assigned to one subledger or another deterministically, in a similar way to how units are assigned to points in Kolaris' network space. However, this too has a problem: it does not account for the fact that PLRs are the central elements of the propagation set: if one were to divide the network, one wouldn have to do it along the lines of PLRs. Since PLRs do not cluster with each other, but are rather deliberately spread out according to the redundancy algorithm, this would be \emph{extremely} fragile and vulnerable to churn.
+
+A much simpler solution reminiscent of the latter option is to use the Kolaris subnetwork system, whereby whole Kolaris networks can be created within the one network, while maintaining linkage through NLRs. This way, each shard/subledger would have its own subnetwork in Kolaris, which it would use to operate effectively a normal Miriar ledger. PLRs would operate within these shards, although NLRs are a problem: if it is mandated of the host Kolaris network that all nodes register with either storage or computation and then one shard, every NLR will be on \emph{a} shard, but it just might not be the same shard as the node in question. However, provided \(C\) is high enough, there is enough redundancy in the system to tolerate this already, and, by using simpler shards with fewer nodes, conflicts are reduced, meaning it would be fine to propagate only to those NLRs which are on the same shard.
+
+Importantly, in Kolaris networks using Miriar, all nodes must be part of a shard, which should be assigned with a separate addition certificate, as with any other subnetwork, but one that should declare the subnetwork as \texttt{miriar}, with the actual shard being determined by the hash of the sum of all the random numbers provided by the NLRs. Accepting this would require only minor modifications to the routing algorithm.
+
+For every entry \(\epsilon\) that arrives on the network, its hash \(H(\epsilon)\) should be used to assign it to a bucket: if there are three shards, then an entry should be assigned to the third shard if its hash is numerically in the highest third of the hash-space. Note that, unlike other subnetworks in large-scale Kolaris networks that allow users to create their own, Miriar shards should be \emph{transparent subnetworks}, such that the fact that there are multiple for the term \texttt{miriar} is acknowledged implicitly in the protocol. Of course, the nodes to whom entries are first given should be on the correct shard, or they should return an error and not propagate.
+
+With all that described, we can now explore the exact benefits of sharding in this way. First, conflicts are reduced, since propagation is much simpler, thereby reducing the need to set \(\Gamma\) to higher values, and improving the speed with which entries can enter confirmed epochs. Secondly, and primarily, there is the reduction in the amount that nodes have to store, making it easier to participate in the network: even having just two shards would approximately halve the amount that every node stores of the ledger. Importantly, however, higher numbers of shards have the distinct \emph{disadvantage} of having so few nodes that they end up with less stringent validation, potentially compromising the security of that shard, and thereby of the whole ledger.
+
+Note that, while it may seem tempting to allocate a certain type of entry to a certain shard, this is pedantry, and should be rejected, since it will simply reduce the compexity of attacks by ensuring that, for example, to compromise a large number of addresses, all attackers need to do is take control of one shard, rather than many. On the point of attacks, it may seem as though our system ofr allocating entries to shards is highly vulnerable to being brute-forced, but one ought to remember that there is still a \(\tau\) in each \(\epsilon\), meaning a proof of work or the like would have to be constructed for every single one of these, making such an endeavour substantially more difficult.
+
+To this point, entries for the same contract will very likely end up in completely different shards, meaning that, to get an accurate picture of the ledger, a client must launch at least \(Z\) lots of some number of requests that satisfy that client that the results they are receiving are adequate. This is another way in which a large number of shards is highly disadvantageous.
+
+Finally, shards are a flexible system, since, once entries are validated, they can easily move into a different shard if, say, a new shard is added to the network, or an old one removed. Having the number of shards change with network growth, up to a point, is probably a good idea, although further mathematical modelling should be devoted to this question.
+
+\chapter{Cryptocurrency}
+\label{sec:org7b7ddbf}
+
+To begin with, one thing should be made very clear: if this is the section of this paper you have been waiting for, you may well be disappointed. Miriar is not a 'DeFi' or 'Web3' project, it is an append-only distributed ledger extension on Kolaris --- make of that what you will. It is not intended to host some native 'Miriar coin' which can be mined, and it is not intended as a get-rich-quick scheme. For that reason, it is highly recommended that Miriar be deployed \emph{without} a native coin at all, and that instead the epoch rewards be lodged through an external cryptocurrency, such as Monero. The greatest value of Miriar comes in its ability to extend Kolaris for smart contracts, and in its refinements to the routing system, together with its ability to reliably map human-readable addresses to units on a Kolaris network.
+
+With that said, a running a cryptocurrency on top of Mune is perfectly viable, since the existing contract logic can be used very simply. Contracts have \emph{instances}, and therefore a contract can be established in which each instance of it is a single account (or 'wallet' in common cryptocurrency parlance), which can hold a certain balance (the emergent state of the contract).
+
+To illustrate this, let's take the simplest example imaginable: Alice pays Bob ten tokens through this system. To do so, she would send an entry into the correct shard of the network that states that she wishes to pay Bob this amount. The validation logic for this kind of contract is very simple: if Alice's account has enough tokens in it to make this transaction, it should be considered valid. This means that, if Alice only has those 10 tokens, and she tries top spend them to both Bob and Chloe at the same time, these entries will conflict in the live group, and they will both be cancelled (though one may perhaps prevail randomly). This solves the double-spend problem immediately. If Alice spends all her tokens and then later tries to spend more, there will of course be a conflict with an existing epoch, which will invalidate the new entry.
+
+Of course, in reality, most transactions are made up of \emph{exchanges}, in which two things of value are transferred between parties. If only one of these things exists on the network (i.e. the tokens), and the other is physical (e.g. a hotel room), then it would make sense for the transaction made to be one-way (unless the hotel room key is represented as a token with fixed ownership, however). In another exchange, however, in which Chloe pays Bob 15 tokens for a certain human-readable address he controls, Chloe would create an entry making the payment to Bob, and Bob would make an entry transferring his address to Chloe, but these two should only be executed if both pass. For instance, if Chloe makes another transaction that empties her account, and her transaction to Bob fails, the address shoudl not be transferred. Likewise, if there is some problem with the address transfer, Chloe's transaction should be terminated. This can be achieved through \emph{bundling}, whereby multiple entries are grouped into the same super-entry, and they are then propagated together. Entries may be propagated in a bundle by adding a note to their \(\phi\) values that declare that they should only be considered valid if they are in a bundle with another entry with some specific entry ID. Therefore, Alice and Bob should generate the IDs of their entries, and exchange them, before finalising and signing them, and then exchanging them. By including this reference to bundling in the payload, Bob cannot, for example, send Chloe's transaction through the network himself after she has validated it, without also sending his own through. He could, of course, provide the ID of a completely different entry, perhaps one that simply transfers some tokens to himself, and Chloe woould be none the wiser, leading to Bob getting Chloe's tokens without handing over his address, but this is solved by the intricacies of the entry ID system. Rather than being purely random, IDs should be the attachment of random data to the hash of the payload, such that
+
+\begin{align*}
+\epsilon_I = \{ H(\{  v, H(\mathbb{E}_2), \phi \}), \epsilon_\star \}, \tag{10.1}
+\end{align*}
+
+where \(\epsilson_\star\) is the random data. Note the exclusion of \(\tau\), since that should be made on the entire entry, including the UUID. Hence, rather than exchanging their IDs, Bob and Chloe should simply exchange the set \(\{ v, H(\mathbb{E}_2), \phi \}\), which is meaningless to each one without the accompanying signature, but the IDs of the entries can be derived, such that a bundle condition \(\beta\) can be added to the real payload (these are excluded from \(\epsilon_I\) itself, since they are not known until \emph{after} the IDs have been derived).
+
+Hence, exchanges can easily be made through Miriar.
+
+Notably, however, transactions of currency are very common in contracts, for instance, in the earlier example of Alice's problem-solving smart contract, she paid out an amount of tokens to the winning participant, or reclaimed them herself if no one solved the problem in time. At that point, we simply called these tokens of pride, in effect, since they had no value, but now we could indeed link them to a cryptocurrency system. To do this, however, there would need to be two layers of contract validation: first the validation of the validity of the transaction, and second the validation of the validity of Alice's contract. To make this work, we define \emph{compound contracts}, which are simply contracts made up of multiple other contracts that call their logic explicitly and in a signed manner. Rather than re-implementing the currency logic, Alice shoudl call out to it directly, and, since this can be validated, others can say with confidence that, even though the contract was written by Alice, it was using valid cryptocurrency rules, and therefore the token transfer is valid as well. Such compound contracts are actually surprisingly simple, but they solve a large number of problems and enable an even larger number of use-cases.
+
+Astute readers may note that the proofs of work used to prevent spam in Miriar may be problematic in a cryptocurrency system. Since there are no transaction fees, which these proofs stand in for, it is entirely possible for one to transact an amount of tokens such that the proof of work is more costly, which may be problematic in \emph{some} applications. A simple solution to this is to allow bundles to have single proofs of work for many entries, allowing services to arise that will bundle micro-transactions and propagate them onto the ledger, reducing user costs. Again, however, this would likely be a highly specialised use-case.
+
+\part{Conclusion}
+\label{sec:orgce41842}
+
+To conclude, Miriar provides a new layer to the existing Quantorium stack of Lykros running on a Kolaris network, extending these existing technologies with an append-only ledger that provides new possibilities for mass data replication and micro-computation, facilitating things like smart contracts to be written and executed natively on a Kolaris network. On these foundations, a new hybrid routing system can be built for Kolaris, which prevents the domino attacks that pose a significant threat to the original protocol, while greatly improving the security and reliability of routing. Further, through this ledger system, an infallible map can be built of human-readable addresses to machine addresses on a Kolaris network, enabling the development of apps on Kolaris that can be identified and accessed through simple strings like \texttt{google.com}. Beyond these addressing and routing capabilities, a legder ledger of this kind has the potential to fully replace existing blockchain systems by enabling the development of efficient and verifiable smart contracts, which can form a cryptocurrency with no native base currency, allowign greater network resilience to price shocks, while maintaining the security promises that only cryptocurrencies can provide.
+
+Through these technologies, Miriar provides the perfect complement to Lykros and Kolaris, allowing the network to effectively act as a single, unified platform for the decentralisation of technology and infrastructure. The development of smart contracts originally, through the Ethereum blockchain, has led to an explosion of innovation in the sector of decentralised finance in particular, but, with access to a native mass storage and computation layer with the verifiability promises of Kolaris and the cryptographic security of Lykros, it is our firm belief that these systems can be improved by no small amount. Kolaris and Lykros on their own provide an incredible backend system for all number of things, and Miriar not only improves them for their original tasks, but also extends them greatly by allowing an entirely separate class of operation --- that which requires a universally replicated ledger and arbtirary propagation validation operations --- to be executed natively on the network, without reference to external systems.
+
+Finally, in terms particularly of cryptocurrency, Miriar pioneers a new kind of ledger system through the unique deterministic propagation architecture enabled by Kolaris: unlike existing blockchain systems, Kolaris has a clear system by which data should be sent between nodes, allowing conflicts to be more gracefully and effectively handled, removing the need for expensive consensus mechanisms such as proof of work, thereby reducing the network's carbon footprint greatly, a critical requirement of new decentralised technology in an age of human-accelerated global warming. Further, by repurposing proof of work for its original intended purpose of preventing spam, Miriar is able to minimise conflicts while avoiding the need for a so-called 'gas fee', or in fact any native cryptocurrency --- this makes Miriar the most flexible decentralised ledger platform yet.
+
+As stated throughout the documents published by the Quantorium project, our aim is very simple: to improve the human race as much as possible by pioneering novel distributed technologies to enable the next generation of development to benefit the people of the human race, beyond just governments and corporations. There can be no doubt that blockchain will continue to exist for the forseeable future, simply because of its incredible usage, but, hopefully, Miriar can learn further from such existing technologies, particularly in the realm of contract optimisation, and, conversely, we sincerely hope that existing technologies can learn from Miriar. As a species, it is high time to take control of our data and move forward into a world in which the incentives that govern our societies are geared for the betterment of \emph{the people}, something that has thus far proved largely impossible, time and time again. It is our hope that, through decentralisation, systems with such positive incentives may finally be able to be built, and therefore that they may directly or indirectly increase human prosperity. All that remains now is to use them.
+\end{document}

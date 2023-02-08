@@ -1,0 +1,4 @@
+# Artifacts are specifically *not* committed
+*.pdf
+*.bbl
+*.run.xml
