@@ -298,9 +298,13 @@ fn main(curr_id: Id, entry: Payload, state: State) -> Result<(), (Id, String)> {
             if let Some((id, _)) = state.begun {
                 return Err((id, String::from("contract already begun")));
             } else if day != Day::current() {
-                // This is a self-blame, since this entry is objectively invalid, without needing
-                // any reference to any others (it will be invalid regardless of the state of the contract)
-                return Err((curr_id, String::from("cannot retroactively/proactively begin the contract")));
+                // This is a self-blame, since this entry is objectively invalid,
+                // withoutneeding any reference to any others (it will be invalid
+                // regardless of the state of the contract)
+                return Err((
+                    curr_id,
+                    String::from("cannot retroactively/proactively begin the contract")
+                ));
             } else {
                 return Ok(());
             }
@@ -315,7 +319,10 @@ fn main(curr_id: Id, entry: Payload, state: State) -> Result<(), (Id, String)> {
                 return Err((curr_id, String::from("contract not begun")));
             } else if Day::current() > (state.begun.unwrap().1 + 30) {
                 // We blame this on the beginning entry
-                return Err((state.begun.unwrap().0, String::from("too late to make a claim")));
+                return Err((
+                    state.begun.unwrap().0,
+                    String::from("too late to make a claim")
+                ));
             } else {
                 if proof_is_valid(proof) {
                     return Ok(());
@@ -334,7 +341,10 @@ fn main(curr_id: Id, entry: Payload, state: State) -> Result<(), (Id, String)> {
                 // Self-blame
                 return Err((curr_id, String::from("contract not begun")));
             } else if Day::current() < (state.begun.unwrap().1 + 30) {
-                return Err((state.begun.unwrap().0, String::from("too early to terminate")));
+                return Err((
+                    state.begun.unwrap().0,
+                    String::from("too early to terminate")
+                ));
             } else {
                 return Ok(());
             }
@@ -354,26 +364,32 @@ pub enum Payload {
     Terminate,
 }
 
-// This would be a proper entry id type in a real contract, and it would be library-provided.
+// This would be a proper entry id type in a real contract, and it would be
+// library-provided.
 pub type Id = String;
 
 pub struct State {
-    /// The day on which the contract began, and the id of the entry that began it, if indeed it has been begun yet,
+    /// The day on which the contract began, and the ID of the entry that began it, if
+    /// indeed it has been begun yet,
     begun: Option<(Id, Day)>,
-    /// The amount staked. This does not have an entry ID assoicated with it, because it doesn't need one: after the
-    /// contract has been begun, no other entry can change this, or declare a different value. Conflicting `Begin`
-    /// payloads will be identified without this.
+    /// The amount staked. This does not have an entry ID assoicated with it, because it
+    /// doesn't need one: after the contract has been begun, no other entry can
+    /// change this, or declare a different value. Conflicting `Begin` payloads
+    /// will be identified without this.
     amount: u16,
-    /// THe id of the entry that claimed the reward, if the reward has been claimed.
+    /// The id of the entry that claimed the reward, if the reward has been claimed.
     claimed: Option<Id>,
-    /// Whether or not the creator has 'terminated' the contract by taking the reward back,
-    /// which is not possible after a claim (i.e. the contract will always either be waiting, claimed, or
-    /// terminated, if it has been started).
+    /// Whether or not the creator has 'terminated' the contract by taking the reward
+    /// back, which is not possible after a claim (i.e. the contract will always
+    /// either be waiting, claimed, or terminated, if it has been started).
     terminated: Option<Id>,
 }
 #[miriar::derive_state]
-pub fn derive_state(prev_entries: Vec<(String, Payload)>) -> Result<State, (Id, String)> {
-    // If there have been no entries for this contract yet, then it hasn't been started yet
+pub fn derive_state(
+    prev_entries: Vec<(String, Payload)>
+) -> Result<State, (Id, String)> {
+    // If there have been no entries for this contract yet, then it hasn't been
+    // started yet
     if prev_entries.is_empty() {
         return Ok(State {
             begun: None,
@@ -383,7 +399,8 @@ pub fn derive_state(prev_entries: Vec<(String, Payload)>) -> Result<State, (Id, 
         });
     }
 
-    // In Rust, this removes the first element of the list, allowing us to iterate over the rest later
+    // In Rust, this removes the first element of the list, allowing us to iterate over
+    // the rest later
     let first_entry = prev_entries.remove(0);
     if let Payload::Begin { amount, day } = first_entry.1 {
         let mut claimed = None;
@@ -394,7 +411,8 @@ pub fn derive_state(prev_entries: Vec<(String, Payload)>) -> Result<State, (Id, 
         // This excludes the first entry because of the earlier `.remove()`
         for (id, entry) in prev_entries {
             match entry {
-                Payload::Begin { .. } => return Err((id, String::from("contract began multiple times"))),
+                Payload::Begin { .. } =>
+                    return Err((id, String::from("contract began multiple times"))),
                 Payload::Claim { .. } => {
                     if terminated {
                         return Err((id, String::from("claimed after termination")));
@@ -427,7 +445,10 @@ pub fn derive_state(prev_entries: Vec<(String, Payload)>) -> Result<State, (Id, 
         });
     } else {
         // If the first payload isn't starting things, something has gone wrong
-        return Err((first_entry.0, String::from("first payload does not start the contract")));
+        return Err((
+            first_entry.0,
+            String::from("first payload does not start the contract")
+        ));
     }
 }
 \end{verbatim}
