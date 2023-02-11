@@ -1,6 +1,10 @@
 # Miriar
 
-TODO
+Miriar is a decentralised, append-only ledger system designed to provide an extension to [Kolaris](https://github.com/TheQuantorium/kolaris) that supports storing data *immutably* and *infallibly*, with arbitrary validation mechanisms. This system is similar to blockchain, and allows smart contracts, cryptocurrencies, infallible routing tables, and addressing systems to all operate simply and securely, however it differs from systems like Ethereum in that it has *no native token*, instead using miniature proofs of work to add a cost to the creation of new entries in the ledger. This renders large-scale consensus mechanisms, such as proof of work, obsolete, and the patch-based versioning algorithm of [Lykros](https://github.com/TheQuantorium/lykros) is instead used to maintain consistency across the network, leading to a far lower carbon footprint, without the security compromises of other proof mechanisms, such as proof of stake. This system can also eliminate the possibility of *domino attacks* in a Kolaris network, a severe form of attack that could previously allow a sufficiently advanced attacker to shut down a Kolaris network.
+
+In essence, Miriar is a system that allows users to submit small packets of data to a Kolaris network, with arbitrary validation requirements. This allows the creation of arbitrarily complex digital contracts, such as escrow services, cryptocurrencies, NFTs, etc., all without any underlying 'gas' system, making the network far more resilient to external price fluctuations. 
+
+**Warning:** Miriar is *highly experimental*, and may well fail completely. At this stage, the project is in its very early infancy, and the specification for it is still being edited. While we welcome publicity and support, any mentions of Miriar should make clear that it is still an experimental technology: of all the components of [the Quantorium](https://github.com/TheQuantorium), this is by far the most likely to end up not working. Until Miriar does work, [Ethereum](https://ethereum.org) is recommended as a smart contract layer, and [Monero](https://getmonero.org) as a private currency.
 
 ## License
 
